@@ -37,6 +37,7 @@ public class frankensteinsIndicatorScript : MonoBehaviour {
     private List<string> coords = new List<string> { "A1", "B1", "C1", "D1", "E1", "F1", "G1", "A2", "B2", "C2", "D2", "E2", "F2", "G2", "A3", "B3", "C3", "D3", "E3", "F3", "G3", "A4", "B4", "C4", "D4", "E4", "F4", "G4", "A5", "B5", "C5", "D5", "E5", "F5", "G5", "A6", "B6", "C6", "D6", "E6", "F6", "G6", "A7", "B7", "C7", "D7", "E7", "F7", "G7", };
     bool youScrewedUp = false;
     int beforeMovement = -1;
+    string theseAreBad = "";
 
     public GameObject[] Eyelids; //Left, Right
     public GameObject[] HalfOpens; //Left, Right
@@ -134,6 +135,12 @@ public class frankensteinsIndicatorScript : MonoBehaviour {
             invalidMoods.Add((((targetsY + 5) % 7) * 7 + (targetsX + 5) % 7 + 49) % 49);
             invalidMoods.Add((((targetsY + 4) % 7) * 7 + (targetsX + 4) % 7 + 49) % 49);
         }
+
+        for (int i = 0; i < invalidMoods.Count(); i++) {
+            theseAreBad = theseAreBad + coords[invalidMoods[i]] + " ";
+        }
+
+        Debug.LogFormat("[Frankenstein's Indicator #{0}] Invalid moods: {1}", moduleId, theseAreBad);
 
         currentMood = UnityEngine.Random.Range(0, 49);
         while (invalidMoods.IndexOf(currentMood) != -1 || emptySpaces[currentMood] == '#') {
@@ -257,10 +264,16 @@ public class frankensteinsIndicatorScript : MonoBehaviour {
         }
         currentY = currentMood / 7;
         currentX = currentMood % 7;
-        if (beforeMovement != currentMood) {
-            Debug.LogFormat("[Frankenstein's Indicator #{0}] You moved {1}, you are now at {2}.", moduleId, movementNames[movement], coords[currentMood]);
+        if (invalidMoods.IndexOf(currentMood) != -1) {
+            Debug.LogFormat("[Frankenstein's Indicator #{0}] Trying to move {1} would result in an invalid mood at {2}. Strike!", moduleId, movementNames[movement], coords[currentMood]);
+            GetComponent<KMBombModule>().HandleStrike();
+            currentMood = beforeMovement;
+        } else {
+            if (beforeMovement != currentMood) {
+                Debug.LogFormat("[Frankenstein's Indicator #{0}] You moved {1}, you are now at {2}.", moduleId, movementNames[movement], coords[currentMood]);
+            }
+            ShowFace();
         }
-        ShowFace();
     }
 
     void nametagPress () {
