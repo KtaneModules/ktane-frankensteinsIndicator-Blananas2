@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 using KModkit;
+using System.Text.RegularExpressions;
 
 public class frankensteinsIndicatorScript : MonoBehaviour {
 
@@ -60,6 +61,7 @@ public class frankensteinsIndicatorScript : MonoBehaviour {
 
         Nametag.OnInteract += delegate () { nametagPress(); return false; };
 
+        GetComponent<KMBombModule>().OnActivate += OnActivate;
     }
 
     // Use this for initialization
@@ -67,7 +69,7 @@ public class frankensteinsIndicatorScript : MonoBehaviour {
         chosenIndicator = UnityEngine.Random.Range(0, 11);
         Corneas[0].GetComponent<MeshRenderer>().material = eyeColors[chosenIndicator];
         Corneas[1].GetComponent<MeshRenderer>().material = eyeColors[chosenIndicator];
-        NameTagName.text = indNames[chosenIndicator];
+        NameTagName.text = "";
 
         if (Bomb.GetBatteryCount() == 4 && Bomb.GetBatteryHolderCount() == 2) { //row 1
             targetsY = 0;
@@ -85,7 +87,7 @@ public class frankensteinsIndicatorScript : MonoBehaviour {
             targetsY = 3;
         }
 
-        switch ((Bomb.GetOnIndicators().Count() - Bomb.GetOffIndicators().Count() + 700) % 7) {
+        switch (mod(Bomb.GetOnIndicators().Count() - Bomb.GetOffIndicators().Count() + 700, 7)) {
             case 3: targetMood = targetsY * 7; targetsX = 0; break; //A
             case 2: targetMood = targetsY * 7 + 1; targetsX = 1; break; //B
             case 1: targetMood = targetsY * 7 + 2; targetsX = 2; break; //C
@@ -97,43 +99,43 @@ public class frankensteinsIndicatorScript : MonoBehaviour {
         }
 
         while (emptySpaces[targetMood] == '#') {
-            switch (Bomb.GetPortCount() % 4) {
+            switch (mod(Bomb.GetPortCount(), 4)) {
                 case 0: targetMood -= 7; if (targetMood < 0) { targetMood += 49; } break;
-                case 1: targetMood += 1; if (targetMood % 7 == 0) { targetMood = (targetMood + 42) % 49; } break;
+                case 1: targetMood += 1; if (mod(targetMood, 7) == 0) { targetMood = mod(targetMood + 42, 49); } break;
                 case 2: targetMood += 7; if (targetMood > 49) { targetMood -= 49; } break;
-                case 3: targetMood -= 1; if (targetMood % 7 == 6) { targetMood = (targetMood + 7) % 49; } break;
+                case 3: targetMood -= 1; if (mod(targetMood, 7) == 6) { targetMood = mod(targetMood + 7, 49); } break;
                 default: Debug.Log("Damnit."); break;
             }
         }
 
         Debug.LogFormat("[Frankenstein's Indicator #{0}] The target mood is at {1}.", moduleId, coords[targetMood]);
         targetsY = targetMood / 7;
-        targetsX = targetMood % 7;
+        targetsX = mod(targetMood, 7);
 
         if (Bomb.GetSerialNumberLetters().Any(ch => "AEIOU".Contains(ch))) {
             //knight
-            invalidMoods.Add((((targetsY + 2) % 7) * 7 + (targetsX + 1) % 7 + 49) % 49);
-            invalidMoods.Add((((targetsY + 2) % 7) * 7 + (targetsX + 6) % 7 + 49) % 49);
-            invalidMoods.Add((((targetsY + 5) % 7) * 7 + (targetsX + 1) % 7 + 49) % 49);
-            invalidMoods.Add((((targetsY + 5) % 7) * 7 + (targetsX + 6) % 7 + 49) % 49);
-            invalidMoods.Add((((targetsY + 1) % 7) * 7 + (targetsX + 2) % 7 + 49) % 49);
-            invalidMoods.Add((((targetsY + 1) % 7) * 7 + (targetsX + 5) % 7 + 49) % 49);
-            invalidMoods.Add((((targetsY + 6) % 7) * 7 + (targetsX + 2) % 7 + 49) % 49);
-            invalidMoods.Add((((targetsY + 6) % 7) * 7 + (targetsX + 5) % 7 + 49) % 49);
+            invalidMoods.Add(mod(targetsY + 2, 7) * 7 + mod(mod(targetsX + 1, 7) + 49, 49));
+            invalidMoods.Add(mod(targetsY + 2, 7) * 7 + mod(mod(targetsX + 6, 7) + 49, 49));
+            invalidMoods.Add(mod(targetsY + 5, 7) * 7 + mod(mod(targetsX + 1, 7) + 49, 49));
+            invalidMoods.Add(mod(targetsY + 5, 7) * 7 + mod(mod(targetsX + 6, 7) + 49, 49));
+            invalidMoods.Add(mod(targetsY + 1, 7) * 7 + mod(mod(targetsX + 2, 7) + 49, 49));
+            invalidMoods.Add(mod(targetsY + 1, 7) * 7 + mod(mod(targetsX + 5, 7) + 49, 49));
+            invalidMoods.Add(mod(targetsY + 6, 7) * 7 + mod(mod(targetsX + 2, 7) + 49, 49));
+            invalidMoods.Add(mod(targetsY + 6, 7) * 7 + mod(mod(targetsX + 5, 7) + 49, 49));
         } else {
             //bishop
-            invalidMoods.Add((((targetsY + 1) % 7) * 7 + (targetsX + 1) % 7 + 49) % 49);
-            invalidMoods.Add((((targetsY + 2) % 7) * 7 + (targetsX + 2) % 7 + 49) % 49);
-            invalidMoods.Add((((targetsY + 3) % 7) * 7 + (targetsX + 3) % 7 + 49) % 49);
-            invalidMoods.Add((((targetsY + 1) % 7) * 7 + (targetsX + 6) % 7 + 49) % 49);
-            invalidMoods.Add((((targetsY + 2) % 7) * 7 + (targetsX + 5) % 7 + 49) % 49);
-            invalidMoods.Add((((targetsY + 3) % 7) * 7 + (targetsX + 4) % 7 + 49) % 49);
-            invalidMoods.Add((((targetsY + 6) % 7) * 7 + (targetsX + 1) % 7 + 49) % 49);
-            invalidMoods.Add((((targetsY + 5) % 7) * 7 + (targetsX + 2) % 7 + 49) % 49);
-            invalidMoods.Add((((targetsY + 4) % 7) * 7 + (targetsX + 3) % 7 + 49) % 49);
-            invalidMoods.Add((((targetsY + 6) % 7) * 7 + (targetsX + 6) % 7 + 49) % 49);
-            invalidMoods.Add((((targetsY + 5) % 7) * 7 + (targetsX + 5) % 7 + 49) % 49);
-            invalidMoods.Add((((targetsY + 4) % 7) * 7 + (targetsX + 4) % 7 + 49) % 49);
+            invalidMoods.Add(mod(targetsY + 1, 7) * 7 + mod(mod(targetsX + 1, 7) + 49, 49));
+            invalidMoods.Add(mod(targetsY + 2, 7) * 7 + mod(mod(targetsX + 2, 7) + 49, 49));
+            invalidMoods.Add(mod(targetsY + 3, 7) * 7 + mod(mod(targetsX + 3, 7) + 49, 49));
+            invalidMoods.Add(mod(targetsY + 1, 7) * 7 + mod(mod(targetsX + 6, 7) + 49, 49));
+            invalidMoods.Add(mod(targetsY + 2, 7) * 7 + mod(mod(targetsX + 5, 7) + 49, 49));
+            invalidMoods.Add(mod(targetsY + 3, 7) * 7 + mod(mod(targetsX + 4, 7) + 49, 49));
+            invalidMoods.Add(mod(targetsY + 6, 7) * 7 + mod(mod(targetsX + 1, 7) + 49, 49));
+            invalidMoods.Add(mod(targetsY + 5, 7) * 7 + mod(mod(targetsX + 2, 7) + 49, 49));
+            invalidMoods.Add(mod(targetsY + 4, 7) * 7 + mod(mod(targetsX + 3, 7) + 49, 49));
+            invalidMoods.Add(mod(targetsY + 6, 7) * 7 + mod(mod(targetsX + 6, 7) + 49, 49));
+            invalidMoods.Add(mod(targetsY + 5, 7) * 7 + mod(mod(targetsX + 5, 7) + 49, 49));
+            invalidMoods.Add(mod(targetsY + 4, 7) * 7 + mod(mod(targetsX + 4, 7) + 49, 49));
         }
 
         for (int i = 0; i < invalidMoods.Count(); i++) {
@@ -147,11 +149,16 @@ public class frankensteinsIndicatorScript : MonoBehaviour {
             currentMood = UnityEngine.Random.Range(0, 49);
         }
         currentY = currentMood / 7;
-        currentX = currentMood % 7;
+        currentX = mod(currentMood, 7);
 
         Debug.LogFormat("[Frankenstein's Indicator #{0}] The mood they started at is {1}.", moduleId, coords[currentMood]);
         ShowFace();
 	}
+
+    void OnActivate()
+    {
+        NameTagName.text = indNames[chosenIndicator];
+    }
 
     void ShowFace () {
         leftEyeSize = 1;
@@ -213,7 +220,7 @@ public class frankensteinsIndicatorScript : MonoBehaviour {
         beforeMovement = currentMood;
         pressedEye.AddInteractionPunch();
         if (pressedEye == TheEyes[0]) { //left
-            if ((int)Math.Floor(Bomb.GetTime()) % 2 == 0) { //even
+            if (mod((int)Math.Floor(Bomb.GetTime()), 2) == 0) { //even
                 //LEFT
                 currentX -= 1;
                 movement = 3;
@@ -223,7 +230,7 @@ public class frankensteinsIndicatorScript : MonoBehaviour {
                 movement = 2;
             }
         } else { //right
-            if ((int)Math.Floor(Bomb.GetTime()) % 2 == 0) { //even
+            if (mod((int)Math.Floor(Bomb.GetTime()), 2) == 0) { //even
                 //RIGHT
                 currentX += 1;
                 movement = 1;
@@ -250,9 +257,9 @@ public class frankensteinsIndicatorScript : MonoBehaviour {
         while (emptySpaces[currentMood] == '#') {
             switch (movement) {
                 case 0: currentMood -= 7; if (currentMood < 0) { currentMood += 49; } break;
-                case 1: currentMood += 1; if (currentMood % 7 == 0) { currentMood = (currentMood + 42) % 49; } break;
+                case 1: currentMood += 1; if (mod(currentMood, 7) == 0) { currentMood = mod(currentMood + 42, 49); } break;
                 case 2: currentMood += 7; if (currentMood > 49) { currentMood -= 49; } break;
-                case 3: currentMood -= 1; if (currentMood % 7 == 6) { currentMood = (currentMood + 7) % 49; } break;
+                case 3: currentMood -= 1; if (mod(currentMood, 7) == 6) { currentMood = mod(currentMood + 7, 49); } break;
                 default: Debug.Log("Damnit."); break;
             }
 
@@ -263,7 +270,7 @@ public class frankensteinsIndicatorScript : MonoBehaviour {
             }
         }
         currentY = currentMood / 7;
-        currentX = currentMood % 7;
+        currentX = mod(currentMood, 7);
         if (invalidMoods.IndexOf(currentMood) != -1) {
             Debug.LogFormat("[Frankenstein's Indicator #{0}] Trying to move {1} would result in an invalid mood at {2}. Strike!", moduleId, movementNames[movement], coords[currentMood]);
             GetComponent<KMBombModule>().HandleStrike();
@@ -285,4 +292,131 @@ public class frankensteinsIndicatorScript : MonoBehaviour {
             Debug.LogFormat("[Frankenstein's Indicator #{0}] You submitted on {1}, which is incorrect. Strike!", moduleId, coords[currentMood]);
         }
     }
+
+    private int mod(int x, int m)
+    {
+        int r = x % m;
+        return r < 0 ? r + m : r;
+    }
+
+    //twitch plays
+    #pragma warning disable 414
+    private readonly string TwitchHelpMessage = @"!{0} press <left/right> <even/odd> [Presses the left or right eye when the last digit of the timer is even or odd] | !{0} submit [Presses the nametag]";
+    #pragma warning restore 414
+    IEnumerator ProcessTwitchCommand(string command)
+    {
+        if (Regex.IsMatch(command, @"^\s*submit\s*$", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant))
+        {
+            yield return null;
+            Nametag.OnInteract();
+            yield break;
+        }
+        string[] parameters = command.Split(' ');
+        if (Regex.IsMatch(parameters[0], @"^\s*press\s*$", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant))
+        {
+            yield return null;
+            if (parameters.Length > 3)
+            {
+                yield return "sendtochaterror Too many parameters!";
+            }
+            else if (parameters.Length == 3)
+            {
+                string[] eyes = new string[] { "left", "right" };
+                string[] parities = new string[] { "even", "odd" };
+                if (!eyes.Contains(parameters[1].ToLower()))
+                {
+                    yield return "sendtochaterror!f The specified eye '" + parameters[1] + "' is invalid!";
+                    yield break;
+                }
+                if (!parities.Contains(parameters[2].ToLower()))
+                {
+                    yield return "sendtochaterror!f The specified parity '" + parameters[2] + "' is invalid!";
+                    yield break;
+                }
+                while ((int)Bomb.GetTime() % 2 != Array.IndexOf(parities, parameters[2].ToLower())) { yield return "trycancel"; }
+                TheEyes[Array.IndexOf(eyes, parameters[1].ToLower())].OnInteract();
+            }
+            else if (parameters.Length == 2)
+            {
+                string[] eyes = new string[] { "left", "right" };
+                if (eyes.Contains(parameters[1].ToLower()))
+                    yield return "sendtochaterror Please specify a parity to press the eye on!";
+                else
+                    yield return "sendtochaterror!f The specified eye '" + parameters[1] + "' is invalid!";
+            }
+            else if (parameters.Length == 1)
+            {
+                yield return "sendtochaterror Please specify an eye and parity to press the eye on!";
+            }
+            yield break;
+        }
+    }
+
+    IEnumerator TwitchHandleForcedSolve()
+    {
+        var q = new Queue<int[]>();
+        var allMoves = new List<Movement>();
+        var startPoint = new int[] { currentX, currentY };
+        var targets = new int[] { targetsX, targetsY };
+        q.Enqueue(startPoint);
+        while (q.Count > 0)
+        {
+            var next = q.Dequeue();
+            if (next[0] == targets[0] && next[1] == targets[1])
+                goto readyToSubmit;
+            string paths = "";
+            int[] modoffset = new int[] { -1, 1, 1, -1 };
+            bool skip = false;
+            while (emptySpaces[mod(next[1] + modoffset[0], 7) * 7 + next[0]] == '#') { if (invalidMoods.Contains(mod(next[1] + modoffset[0], 7) * 7 + next[0])) skip = true; modoffset[0]--; }
+            if (!invalidMoods.Contains(mod(next[1] + modoffset[0], 7) * 7 + next[0]) && !skip) { paths += "U"; }
+            skip = false;
+            while (emptySpaces[next[1] * 7 + mod(next[0] + modoffset[1], 7)] == '#') { if (invalidMoods.Contains(next[1] * 7 + mod(next[0] + modoffset[1], 7))) skip = true; modoffset[1]++; }
+            if (!invalidMoods.Contains(next[1] * 7 + mod(next[0] + modoffset[1], 7)) && !skip) { paths += "R"; }
+            skip = false;
+            while (emptySpaces[mod(next[1] + modoffset[2], 7) * 7 + next[0]] == '#') { if (invalidMoods.Contains(mod(next[1] + modoffset[2], 7) * 7 + next[0])) skip = true; modoffset[2]++; }
+            if (!invalidMoods.Contains(mod(next[1] + modoffset[2], 7) * 7 + next[0]) && !skip) { paths += "D"; }
+            skip = false;
+            while (emptySpaces[next[1] * 7 + mod(next[0] + modoffset[3], 7)] == '#') { if (invalidMoods.Contains(next[1] * 7 + mod(next[0] + modoffset[3], 7))) skip = true; modoffset[3]--; }
+            if (!invalidMoods.Contains(next[1] * 7 + mod(next[0] + modoffset[3], 7)) && !skip) { paths += "L"; }
+            var cell = paths;
+            var allDirections = "URDL";
+            var offsets = new int[,] { { 0, modoffset[0] }, { modoffset[1], 0 }, { 0, modoffset[2] }, { modoffset[3], 0 } };
+            for (int i = 0; i < 4; i++)
+            {
+                var check = new int[] { mod(next[0] + offsets[i, 0], 7), mod(next[1] + offsets[i, 1], 7) };
+                if (cell.Contains(allDirections[i]) && !allMoves.Any(x => x.start[0] == check[0] && x.start[1] == check[1]))
+                {
+                    q.Enqueue(new int[] { mod(next[0] + offsets[i, 0], 7), mod(next[1] + offsets[i, 1], 7) });
+                    allMoves.Add(new Movement { start = next, end = new int[] { mod(next[0] + offsets[i, 0], 7), mod(next[1] + offsets[i, 1], 7) }, direction = i });
+                }
+            }
+        }
+        throw new InvalidOperationException("There is a bug in autosolve generation.");
+        readyToSubmit:
+        if (allMoves.Count != 0) // Checks for position already being target
+        {
+            var target = new int[] { targetsX, targetsY };
+            var lastMove = allMoves.First(x => x.end[0] == target[0] && x.end[1] == target[1]);
+            var relevantMoves = new List<Movement> { lastMove };
+            while (lastMove.start != startPoint)
+            {
+                lastMove = allMoves.First(x => x.end[0] == lastMove.start[0] && x.end[1] == lastMove.start[1]);
+                relevantMoves.Add(lastMove);
+            }
+            for (int i = 0; i < relevantMoves.Count; i++)
+            {
+                while ((int)Bomb.GetTime() % 2 != ((relevantMoves[relevantMoves.Count - 1 - i].direction % 2 == 0) ? 1 : 0)) { yield return true; }
+                TheEyes[(relevantMoves[relevantMoves.Count - 1 - i].direction < 2) ? 1 : 0].OnInteract();
+                yield return new WaitForSeconds(.1f);
+            }
+        }
+        Nametag.OnInteract();
+    }
+    class Movement
+    {
+        public int[] start;
+        public int[] end;
+        public int direction;
+    }
+
 }
