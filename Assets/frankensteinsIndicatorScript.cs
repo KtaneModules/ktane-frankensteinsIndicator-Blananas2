@@ -218,6 +218,7 @@ public class frankensteinsIndicatorScript : MonoBehaviour {
 
     void eyePress (KMSelectable pressedEye) {
         beforeMovement = currentMood;
+        youScrewedUp = false;
         pressedEye.AddInteractionPunch();
         if (pressedEye == TheEyes[0]) { //left
             if (mod((int)Math.Floor(Bomb.GetTime()), 2) == 0) { //even
@@ -266,7 +267,7 @@ public class frankensteinsIndicatorScript : MonoBehaviour {
             if (invalidMoods.IndexOf(currentMood) != -1) {
                 Debug.LogFormat("[Frankenstein's Indicator #{0}] Trying to move {1} would result in an invalid mood at {2}. Strike!", moduleId, movementNames[movement], coords[currentMood]);
                 GetComponent<KMBombModule>().HandleStrike();
-                currentMood = beforeMovement;
+                youScrewedUp = true;
             }
         }
         currentY = currentMood / 7;
@@ -274,12 +275,18 @@ public class frankensteinsIndicatorScript : MonoBehaviour {
         if (invalidMoods.IndexOf(currentMood) != -1) {
             Debug.LogFormat("[Frankenstein's Indicator #{0}] Trying to move {1} would result in an invalid mood at {2}. Strike!", moduleId, movementNames[movement], coords[currentMood]);
             GetComponent<KMBombModule>().HandleStrike();
-            currentMood = beforeMovement;
+            youScrewedUp = true;
         } else {
             if (beforeMovement != currentMood) {
                 Debug.LogFormat("[Frankenstein's Indicator #{0}] You moved {1}, you are now at {2}.", moduleId, movementNames[movement], coords[currentMood]);
             }
             ShowFace();
+        }
+
+        if (youScrewedUp) {
+            currentMood = beforeMovement;
+            currentY = currentMood / 7;
+            currentX = mod(currentMood, 7);
         }
     }
 
