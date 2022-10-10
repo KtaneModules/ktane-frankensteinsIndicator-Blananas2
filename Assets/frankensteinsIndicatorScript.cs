@@ -264,7 +264,7 @@ public class frankensteinsIndicatorScript : MonoBehaviour {
                 default: Debug.Log("Damnit."); break;
             }
 
-            if (invalidMoods.IndexOf(currentMood) != -1) {
+            if (invalidMoods.IndexOf(currentMood) != -1 && !youScrewedUp) {
                 Debug.LogFormat("[Frankenstein's Indicator #{0}] Trying to move {1} would result in an invalid mood at {2}. Strike!", moduleId, movementNames[movement], coords[currentMood]);
                 GetComponent<KMBombModule>().HandleStrike();
                 youScrewedUp = true;
@@ -273,9 +273,11 @@ public class frankensteinsIndicatorScript : MonoBehaviour {
         currentY = currentMood / 7;
         currentX = mod(currentMood, 7);
         if (invalidMoods.IndexOf(currentMood) != -1) {
-            Debug.LogFormat("[Frankenstein's Indicator #{0}] Trying to move {1} would result in an invalid mood at {2}. Strike!", moduleId, movementNames[movement], coords[currentMood]);
-            GetComponent<KMBombModule>().HandleStrike();
-            youScrewedUp = true;
+            if (!youScrewedUp) {
+                Debug.LogFormat("[Frankenstein's Indicator #{0}] Trying to move {1} would result in an invalid mood at {2}. Strike!", moduleId, movementNames[movement], coords[currentMood]);
+                GetComponent<KMBombModule>().HandleStrike();
+                youScrewedUp = true;
+            }
         } else {
             if (beforeMovement != currentMood) {
                 Debug.LogFormat("[Frankenstein's Indicator #{0}] You moved {1}, you are now at {2}.", moduleId, movementNames[movement], coords[currentMood]);

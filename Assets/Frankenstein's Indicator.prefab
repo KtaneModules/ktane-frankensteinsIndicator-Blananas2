@@ -458,7 +458,7 @@ GameObject:
   - component: {fileID: 114139553842080666}
   - component: {fileID: 114338737415631418}
   m_Layer: 0
-  m_Name: Template
+  m_Name: Frankenstein's Indicator
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
