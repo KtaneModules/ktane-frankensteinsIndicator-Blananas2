@@ -279,10 +279,10 @@ public class frankensteinsIndicatorScript : MonoBehaviour {
                 youScrewedUp = true;
             }
         } else {
-            if (beforeMovement != currentMood) {
+            if (beforeMovement != currentMood && !youScrewedUp) {
                 Debug.LogFormat("[Frankenstein's Indicator #{0}] You moved {1}, you are now at {2}.", moduleId, movementNames[movement], coords[currentMood]);
+                ShowFace();
             }
-            ShowFace();
         }
 
         if (youScrewedUp) {
